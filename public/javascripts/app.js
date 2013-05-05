@@ -5,9 +5,9 @@ $(function(){
       $('#content').html(evt.data);  
   };
   
-  $("#content").keyup(function(e) {
+  	$("#content").keydown(function(e) {
     if($("#content").html().length > 0){
-      ws.send($("#content").html());
+      setTimeout(function(){ws.send($("#content").html())},0);
     }
   });
   

@@ -20,30 +20,39 @@ configure do
   MongoMapper.database = 'posts'
 end
 
-$channel = EM::Channel.new
+@channel = EM::Channel.new
 
 EventMachine.run do
   class App < Sinatra::Base
 
       get '/' do
-          erb :index
+      	@post = Post.new
+      	@post.save!
+      	redirect @post.id
+      	erb :index
       end
 
-      post '/' do
-        $channel.push "#{params[:content]}"
+      post '/:id' do
+        @channel.push "#{params[:content]}"
       end
+      
+      get '/:id' do
+	    	@post = Post.find_by__id(params[:id])
+	    	
+	    	erb :index
+	    end
   end
   
   EventMachine::WebSocket.start(:host => '0.0.0.0', :port => 8080) do |ws|
       ws.onopen {
-        sid = $channel.subscribe { |content| ws.send content }
+        sid = @channel.subscribe { |content| ws.send content }
 
         ws.onmessage { |content|
-          $channel.push "#{content}"
+          @channel.push "#{content}"
         }
 
         ws.onclose {
-          $channel.unsubscribe(sid)
+          @channel.unsubscribe(sid)
         }
       }
 
